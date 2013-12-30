@@ -29,6 +29,7 @@ Below is a list of all the available options for settings pages. Required option
 - [Edit Fields](#edit-fields) *(required)*
 - [Validation Rules](#validation-rules)
 - [Before Save](#before-save)
+- [Before Load](#before-load)
 - [Permission](#permission)
 - [Custom Actions](#custom-actions)
 - [Storage Path](#storage-path)
@@ -74,7 +75,7 @@ This is the title of the settings page used in the menu and as the page's primar
 		)
 	),
 
-The `edit_fields` array lets you define the editable fields for a settings page. All field types are allowed with the exception of key and relationship fields. This works much like the [`edit_fields`](/docs/model-configuration#edit-fields) option in model config files. When an admin chooses to save a settings page, an array will be provided to the [`before_save callback`](#before-save) containing all of your data. The indexes of the data values will be the same as the indexes you provide in the `edit_fields` array.
+The `edit_fields` array lets you define the editable fields for a settings page. All field types are allowed with the exception of key and relationship fields. This works much like the [`edit_fields`](/docs/model-configuration#edit-fields) option in model config files. When the data is first loaded from the stored settings data, an array will be provided to the [`before_load callback`](#before-load).  You can perform additional calculations, setup extended defaults, and load other dynamic data from web services or databases in order to set up the settings. When an admin chooses to save a settings page, an array will be provided to the [`before_save callback`](#before-save) containing all of your data. The indexes of the data values will be the same as the indexes you provide in the `edit_fields` array.
 
 <img src="https://raw.github.com/FrozenNode/Laravel-Administrator/master/examples/images/settings-overview.png" />
 
@@ -117,6 +118,31 @@ The validation rules for your settings page can be set using the `rules` option.
 	},
 
 The `before_save` callback is run after basic validation using the [`rules`](#validation-rules) option, but before the form data is saved to the JSON storage. You can use this function to store the data however you want. Since the `$data` parameter is passed by reference, you can also manipulate the form data prior to it being saved.
+
+The `$data` parameter is a simple array of `key -> value` pairs. The keys are the same as those provided in the [`edit_fields`](#edit-fields) option.
+
+<a name="before-load"></a>
+### Before Load
+
+	/**
+	 * This is run after the settings are loaded from storage 
+	 * and prior to displaying the JSON form data
+	 *
+	 * @type function
+	 * @param array		$data
+	 *
+	 * @return string (on error) / void (otherwise)
+	 */
+	'before_load' => function(&$data)
+	{
+		// Update global copyright date
+		$data['site_copyright'] = date('y');
+		
+		// Pull the latest privacy policy language from a partner site
+		$data['site_privacy_text'] = file_get_contents('http://example.com/privacy');
+	},
+
+The `before_load` callback is run after data is loaded from storage and before the form is displayed.  You can use this function to manipulate the data however you want. Since the `$data` parameter is passed by reference, you can also manipulate the form data prior to it being saved.
 
 The `$data` parameter is a simple array of `key -> value` pairs. The keys are the same as those provided in the [`edit_fields`](#edit-fields) option.
 

@@ -21,6 +21,7 @@ class Config extends ConfigBase implements ConfigInterface {
 	protected $defaults = array(
 		'permission' => true,
 		'before_save' => null,
+		'before_load' => null,
 		'actions' => array(),
 		'rules' => false,
 		'storage_path' => null,
@@ -43,6 +44,7 @@ class Config extends ConfigBase implements ConfigInterface {
 		'edit_fields' => 'required|array|not_empty',
 		'permission' => 'callable',
 		'before_save' => 'callable',
+		'before_load' => 'callable',
 		'actions' => 'array',
 		'rules' => 'array',
 		'storage_path' => 'directory',
@@ -136,7 +138,10 @@ class Config extends ConfigBase implements ConfigInterface {
 			}
 		}
 
-		return $data;
+		//run the beforeLoad function if provided
+		$beforeLoad = $this->runBeforeLoad($data);
+
+		return $beforeLoad;
 	}
 
 	/**
@@ -201,6 +206,31 @@ class Config extends ConfigBase implements ConfigInterface {
 			if (is_string($bs))
 			{
 				return $bs;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Runs the before load method with the supplied data
+	 *
+	 * @param array		$data
+	 *
+	 * @param mixed
+	 */
+	public function runBeforeLoad(array &$data)
+	{
+		$beforeSave = $this->getOption('before_load');
+
+		if (is_callable($beforeLoad))
+		{
+			$bl = $beforeLoad($data);
+
+			//if a string is returned, assume it's an error and kick it back
+			if (is_string($bl))
+			{
+				return $bl;
 			}
 		}
 
